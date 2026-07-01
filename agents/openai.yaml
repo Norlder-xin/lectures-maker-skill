@@ -1,0 +1,7 @@
+interface:
+  display_name: "Lectures Maker"
+  short_description: "Build versioned lecture handouts with Git"
+  default_prompt: "Use $lectures-maker to create a Git-versioned student lecture handout."
+
+policy:
+  allow_implicit_invocation: true
