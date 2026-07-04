@@ -1,13 +1,13 @@
 ---
 name: lectures-maker
-description: Create, revise, version, and publish university-style lecture handouts and teaching notes. Use when the user asks to make lecture notes, student handouts, course materials, class worksheets, Markdown lecture drafts, revise lecture content from uploaded images/PDF/Word/Markdown, manage lecture versions, or export final lecture materials to DOCX. Enforces Markdown-first authoring and Git-based version management for every lecture project.
+description: Create, revise, version, and publish university-style lecture handouts and teaching notes. Use when the user asks to make lecture notes, student handouts, course materials, class worksheets, Markdown lecture drafts, revise lecture content from uploaded images/PDF/Word/Markdown, manage lecture versions, or export final lecture materials to DOCX. Enforces Markdown-first authoring, single-source Markdown editing, and Git-based version management for every lecture project.
 ---
 
 # Lectures Maker
 
 ## Core Rule
 
-Always create or update the Markdown lecture first. Do not create DOCX/PDF as the first artifact. Use the latest Markdown version as the source of truth, then export only when the user confirms the lecture is complete.
+Always create or update the Markdown lecture first. Do not create DOCX/PDF as the first artifact. Use one active Markdown file as the source of truth, then export only when the user confirms the lecture is complete.
 
 Use the lecture title as the project identity. Derive a safe file prefix from the title, for example:
 
@@ -16,21 +16,25 @@ Use the lecture title as the project identity. Derive a safe file prefix from th
 -> 第1讲-AI时代我们为什么要学高中数学
 ```
 
-Prefer title-based names for final published artifacts. Keep generic iteration names only when continuing an existing project that already uses them.
+For new projects, name the Markdown source after the lecture title:
+
+```text
+<lecture-title>.md
+```
+
+Do not create a new Markdown file for every revision. Since Git records every change, edit the existing Markdown source file directly and commit each meaningful change.
 
 ## Required Project Structure
 
 For each lecture project, keep these files in the lecture workspace:
 
 ```text
-<lecture-title>_draft.md       # first Markdown draft, or lecture_draft.md for existing generic projects
-<lecture-title>_v1.md          # revision versions
-<lecture-title>_v2.md
+<lecture-title>.md             # single Markdown source of truth
 change_log.md                  # generated and updated after every change
 <lecture-title>_final.docx     # final Word output after confirmation
 ```
 
-If an existing project already uses `lecture_draft.md`, `lecture_v1.md`, etc., continue that convention unless the user asks to rename. For new projects, use the lecture title in filenames.
+If an existing project already has multiple versioned Markdown files, identify the latest Markdown file, make it the active source file, and continue editing that file unless the user asks to consolidate or rename.
 
 ## Mandatory Git Version Management
 
@@ -100,7 +104,7 @@ error-prone points
 exam focus
 ```
 
-Then create the Markdown draft with this structure unless the user specifies another one:
+Then create the Markdown source file with this structure unless the user specifies another one:
 
 ```markdown
 # 第X讲：xxxx
@@ -128,7 +132,7 @@ Then create the Markdown draft with this structure unless the user specifies ano
 
 For student handouts, keep the language concise. Prefer clear definitions, comparison tables, prompts, examples, fill-in blanks, and exercises. Avoid teacher-only commentary unless the user asks for a teacher version.
 
-After writing the draft, update `change_log.md`, then `git add` and `git commit`.
+After writing the draft, update `change_log.md`, then `git add` and `git commit`. Future revisions must edit this same Markdown file in place.
 
 ## Phase 2: Analyze Uploaded Materials And Insert Semantically
 
@@ -155,21 +159,21 @@ image/table -> near the related explanation
 
 Keep logic complete, heading levels correct, and numbering continuous. State the insertion position in `change_log.md`.
 
-Create the next Markdown version, then commit.
+Edit the active Markdown source file in place, then commit.
 
 ## Phase 3: Directed Edits
 
 When the user asks to delete, modify, expand, simplify, adjust difficulty, add cases, add exercises, or change the audience:
 
-1. Read the latest Markdown version.
+1. Read the active Markdown source file.
 2. Modify only the requested sections.
 3. Keep all unspecified content unchanged.
 4. Update headings, numbering, and cross references only as needed.
-5. Save a new version.
+5. Save the same Markdown source file in place.
 6. Update `change_log.md` with the modified sections and reason.
 7. Commit the change.
 
-If the user says “其余没有提到的部分禁止修改” or similar, copy the previous Markdown version and perform exact local replacements only.
+If the user says “其余没有提到的部分禁止修改” or similar, edit only the requested text ranges in the active Markdown file. Do not copy to a new version file; use Git history for rollback.
 
 ## Phase 4: Final Export
 
@@ -189,8 +193,8 @@ heading hierarchy
 image references
 formula/code block format
 numbering and tables
-student writing space
 change_log.md completeness
+clean Markdown structure without meaningless blank lines
 ```
 
 DOCX requirements:
@@ -198,15 +202,22 @@ DOCX requirements:
 ```text
 Heading 1 for first-level headings
 Heading 2 for second-level headings
-automatic table of contents field
+automatic table of contents field when appropriate
 centered images when present
-polished tables
+polished but plain tables
 page numbers
-header with course or lecture name
-writing space for student notes
+header with course or lecture name when appropriate
+Chinese text in SimSun/宋体
+English text in Times New Roman
+mathematical formulas entered as Word equation objects, not screenshots or decorative images
+white page background only
+black body text
+no decorative background colors or colored fills
+no meaningless blank lines
+no dedicated note areas unless the user explicitly requests them
 ```
 
-Use the documents skill when generating DOCX. Render and visually inspect if the environment has a DOCX renderer. If rendering is unavailable, perform structural checks and tell the user render QA could not be completed.
+Use the documents skill when generating DOCX. Convert the Markdown directly and preserve the lecture content rather than adding extra note boxes, background colors, or decorative layout. Render and visually inspect if the environment has a DOCX renderer. If rendering is unavailable, perform structural checks and tell the user render QA could not be completed.
 
 After final DOCX creation:
 
@@ -217,12 +228,12 @@ After final DOCX creation:
 
 ## Change Log Format
 
-Append one entry per version or export:
+Append one entry per change or export:
 
 ```markdown
 ## YYYY-MM-DD
 
-- 版本：`<file-or-version>`
+- 版本：`<active-md-file-or-final-docx>`
 - 修改章节：<sections changed>
 - 修改原因：<why changed>
 - 插入位置说明：<where new content was inserted, or state that this is final export>
@@ -236,7 +247,7 @@ If the commit hash is not known until after commit, append the hash in a quick f
 Keep user-facing responses short and operational:
 
 ```text
-已生成 <file>。
+已更新 <file>。
 已提交 Git commit: <hash> <message>。
 本次新增内容插入在：<location>。
 ```
